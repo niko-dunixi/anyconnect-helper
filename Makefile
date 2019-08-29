@@ -56,4 +56,4 @@ test:
 	$(GO_PRIVATE) test
 
 clean:
-	rm -v redowl-connect* || true
+	git clean -xdf
