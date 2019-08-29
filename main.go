@@ -34,7 +34,6 @@ func printHelp() {
 
 func main() {
 	args := getArgs(os.Args)
-	fmt.Println(args)
 	if len(args) > 1 {
 		printHelp()
 		os.Exit(1)
