@@ -52,14 +52,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("PreSet")
 		err = ring.Set(keyring.Item{
 			Key:         entryName,
 			Label:       "AnyConnect Helper Credentials",
 			Description: "Securely stored credentials for your AnyConnect user",
 			Data:        data,
 		})
-		fmt.Println("PostSet")
 		if err != nil {
 			panic(err)
 		}
