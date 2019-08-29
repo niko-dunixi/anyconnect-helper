@@ -25,7 +25,36 @@ type CredentialData struct {
 	Password string `json:"password"`
 }
 
+func printHelp() {
+	fmt.Println("Only allowed parameters:")
+	fmt.Println(" --help		Shows this")
+	fmt.Println(" --disconnect		Disconnects VPN")
+	fmt.Println(" --reconnect		Disconnects and reconnects VPN")
+}
+
 func main() {
+	args := getArgs(os.Args)
+	fmt.Println(args)
+	if len(args) > 1 {
+		printHelp()
+		os.Exit(1)
+	} else if len(args) == 1 {
+		shouldExit := true
+		argument := args[0]
+		switch argument {
+		case "--reconnect":
+			disconnect()
+			shouldExit = false
+		case "--disconnect":
+			disconnect()
+		case "--help":
+		default:
+			printHelp()
+		}
+		if shouldExit {
+			os.Exit(0)
+		}
+	}
 	ring, err := keyring.Open(keyring.Config{
 		AllowedBackends: []keyring.BackendType{
 			keyring.KeychainBackend,
@@ -77,6 +106,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getArgs(items []string) []string {
+	if len(items) == 0 {
+		return []string{}
+	}
+	return items[1:]
+}
+
+func disconnect() {
+	anyConnectPath, err := getAnyConnectPath()
+	if err != nil {
+		panic(err)
+	}
+	disconnectCommand := exec.Command(anyConnectPath, "disconnect")
+	disconnectCommand.Stdout = os.Stdout
+	disconnectCommand.Stdin = os.Stdin
+	disconnectCommand.Run()
 }
 
 func CredentialsFromReader(reader *bufio.Reader) (CredentialData, error) {
