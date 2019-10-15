@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -120,9 +121,10 @@ func disconnect() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	cmdErrChan := make(chan error, 1)
-	disconnectCommand := exec.Command(anyConnectPath, "disconnect")
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	disconnectCommand := exec.CommandContext(ctx, anyConnectPath, "disconnect")
 	disconnectCommand.Stdout = os.Stdout
 	disconnectCommand.Stdin = os.Stdin
 	go func() {
@@ -131,6 +133,8 @@ func disconnect() {
 	select {
 	case _ = <-cmdErrChan:
 	case <-time.After(time.Second * 5):
+		ctxCancel()
+		fmt.Println("Disconnect timed-out, killing daemon. Enter sudo password:")
 		killCmd := exec.Command("bash", "-c", `sudo pkill -9 -f cisco`)
 		killCmd.Stdout = os.Stdout
 		killCmd.Stderr = os.Stderr
