@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/99designs/keyring"
 	"golang.org/x/crypto/ssh/terminal"
@@ -119,10 +120,22 @@ func disconnect() {
 	if err != nil {
 		panic(err)
 	}
+	
+	cmdErrChan := make(chan error, 1)
 	disconnectCommand := exec.Command(anyConnectPath, "disconnect")
 	disconnectCommand.Stdout = os.Stdout
 	disconnectCommand.Stdin = os.Stdin
-	disconnectCommand.Run()
+	go func() {
+		cmdErrChan <- disconnectCommand.Run()
+	}()
+	select {
+	case _ = <-cmdErrChan:
+	case <-time.After(time.Second * 5):
+		killCmd := exec.Command("bash", "-c", `sudo pkill -9 -f cisco`)
+		killCmd.Stdout = os.Stdout
+		killCmd.Stderr = os.Stderr
+		_ = killCmd.Run()
+	}
 }
 
 func CredentialsFromReader(reader *bufio.Reader) (CredentialData, error) {
